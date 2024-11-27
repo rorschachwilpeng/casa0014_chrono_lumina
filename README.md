@@ -55,4 +55,4 @@ Calm Technology is the quiet revolution in the digital world, advocating for a m
 ... (Analysis of the potential negative consequences of the devices being prototyped.)
 
 
-![Image Test](images/tomato.png)
+![Image Test](images/tomato.jpg)
