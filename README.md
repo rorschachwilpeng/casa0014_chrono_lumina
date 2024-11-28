@@ -1,8 +1,8 @@
 # CASA0014_Connected-Environment_Chrono_Lumina: Working Amigo
-
-<div style="text-align: center;">
+<p align="center">
   <img src="images/working_amigo.jpeg" alt="Working Amigo" width="300">
-</div>
+</p>
+
 
 ## Table of Contents
 
@@ -63,26 +63,26 @@ Calm Technology is the quiet revolution in the digital world, advocating for a m
   [Rotary Encoder Link](https://example.com/rotary-encoder)
 
 ### System Design
-<div style="text-align: center;">
-  <img src="images/light_positions.png" alt="Working Amigo" width="300">
-</div>
+<p align="center">
+  <img src="images/light_positions.png" alt="Working Amigo" width="1000">
+</p>
 
-<div style="text-align: center;">
+<p align="center">
   <img src="images/casa0014_system_design.png" alt="Working Amigo" width="1000">
-</div>
-
-
+</p>
 
 ### 3D Modeling
 
 Some cool design I probably can learn from:
-<div style="text-align: center;">
-  <img src="images/3d_ideas.jpeg" alt="Working Amigo" width="400"></div>
+<p align="center">
+  <img src="images/3d_ideas.jpeg" alt="Working Amigo" width="500">
+</p>
 
 **Working Amigo** 3D model sketch:
-<div style="text-align: center;">
-  <img src="images/3d_design_idea.png" alt="Working Amigo" width="400">
-</div>
+<p align="center">
+  <img src="images/3d_design_idea.png" alt="Working Amigo" width="500">
+</p>
+
 
 
 
