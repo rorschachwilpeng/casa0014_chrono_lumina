@@ -3,6 +3,7 @@
 <div style="text-align: center;">
   <img src="images/working_amigo.jpeg" alt="Working Amigo" width="300">
 </div>
+
 ## Table of Contents
 
 1. [Working Amigo](#working-amigo)
