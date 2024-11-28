@@ -68,6 +68,10 @@ Calm Technology is the quiet revolution in the digital world, advocating for a m
 </p>
 
 <p align="center">
+  <img src="images/workflow.jpg" alt="Working Amigo" width="500">
+</p>
+
+<p align="center">
   <img src="images/casa0014_system_design.png" alt="Working Amigo" width="1000">
 </p>
 
