@@ -1,6 +1,6 @@
 # CASA0014_Connected-Environment_Chrono_Lumina: Working Amigo
 
-![Working Amigo](images/working_amigo.jpeg)
+<img src="images/working_amigo.jpeg" alt="Working Amigo" width="300" height="300">
 
 ## Table of Contents
 
@@ -9,7 +9,7 @@
 3. [Reflection](#reflection)
 
 ## Working Amigo💻
-The Timer project is a Pomodoro Technique-inspired tool that utilizes subtle lighting cues to enhance focus and productivity, while also serving as a non-verbal communication device to indicate work and rest periods to users and their surroundings.
+The Working Amigo is a Pomodoro Technique-inspired tool that utilizes subtle lighting cues to enhance focus and productivity, while also serving as a non-verbal communication device to indicate work and rest periods to users and their surroundings.
 
 ## Background
 #### The Great Illusion: Busyness as Productivity
