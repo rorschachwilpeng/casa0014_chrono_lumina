@@ -7,8 +7,12 @@
 ## Table of Contents
 
 1. [Working Amigo](#working-amigo)
-2. [Building Process](#building-process)
-3. [Reflection](#reflection)
+2. [Background](#background)
+3. [Board & Sensor](#board--sensor)
+4. [System Design](#system-design)
+5. [3D Modeling](#3d-modeling)
+6. [Building Process](#building-process)
+7. [Reflection](#reflection)
 
 ## Working Amigo💻
 The Working Amigo is a Pomodoro Technique-inspired tool that utilizes subtle lighting cues to enhance focus and productivity, while also serving as a non-verbal communication device to indicate work and rest periods to users and their surroundings.
