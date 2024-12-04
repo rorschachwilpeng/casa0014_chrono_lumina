@@ -12,6 +12,7 @@ extern bool studyTimeFinish;
 extern int remainingStudyTime;
 extern bool lightsActive;
 
+
 // 函数声明
 void studyAreaLogic();
 void StudyEncoderHandler();
