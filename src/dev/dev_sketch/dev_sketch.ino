@@ -316,11 +316,6 @@ void controlStudyLights() {
 }
 
 
-
-
-
-
-
 void controlStudyArea(int lights[], int numLights, bool dynamicEffect) {
     static float angle = 0.0; // 角度，用于正弦波亮度控制
     static int current_pixel = 0; // 当前点亮的像素
