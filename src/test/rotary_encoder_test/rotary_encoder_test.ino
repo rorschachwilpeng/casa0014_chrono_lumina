@@ -1,23 +1,35 @@
-#define SIG_PIN A0  // 定义信号引脚为 A0
-#define MAX_ANGLE 300  // 传感器的最大旋转角度
+// Define the pins for the rotary encoder
+#define CLK_PIN 14  // CLK connected to D5 (GPIO14)
+#define DT_PIN 12   // DT connected to D6 (GPIO12)
+#define SW_PIN 13   // SW connected to D7 (GPIO13)
+
+int lastCLK = LOW;       // Store the previous state of the CLK pin
+int lastSW = HIGH;       // Store the previous state of the button (SW) pin
 
 void setup() {
-  // 初始化串口监视器
-  Serial.begin(9600);
+  pinMode(CLK_PIN, INPUT);
+  pinMode(DT_PIN, INPUT);
+  pinMode(SW_PIN, INPUT_PULLUP); // Internal pull-up resistor
+  Serial.begin(115200);
+  Serial.println("Rotary Encoder Initialized with D5, D6, D7");
 }
 
 void loop() {
-  // 读取模拟值 (0 - 1023)
-  int sensorValue = analogRead(SIG_PIN);
-  
-  // 将模拟值转换为角度
-  float angle = map(sensorValue, 0, 1023, 0, MAX_ANGLE);
+  // Detect rotary encoder rotation
+  int currentCLK = digitalRead(CLK_PIN);
+  if (currentCLK != lastCLK && currentCLK == HIGH) { // Detect rising edge
+    if (digitalRead(DT_PIN) != currentCLK) {
+      Serial.println("Rotated CW (Clockwise)"); // Clockwise rotation
+    } else {
+      Serial.println("Rotated CCW (Counterclockwise)"); // Counterclockwise rotation
+    }
+  }
+  lastCLK = currentCLK;
 
-  // 打印角度值到串口监视器
-  Serial.print("角度值: ");
-  Serial.print(angle);
-  Serial.println(" 度");
-
-  // 延迟以便观察输出
-  delay(100);
+  // Detect button press
+  int currentSW = digitalRead(SW_PIN);
+  if (currentSW == LOW && lastSW == HIGH) { // Detect press event
+    Serial.println("Button Pressed!");
+  }
+  lastSW = currentSW;
 }
