@@ -80,55 +80,77 @@ private:
     unsigned long rest_remaining;  // Remaining time for rest mode
     const int maxLights = 12;           // Maximum number of lights
     int currentLightCount = maxLights; // Current number of lights in use
+    int lastCLK = LOW;  // Store the previous state of CLK pin
+    int currentCLK;
+    int lastDT = LOW;    // Add DT state tracking
+    unsigned long lastDebounceTime = 0;  // For debouncing
+    const unsigned long debounceDelay = 1;  // Debounce time in ms
+    unsigned long lastPrintTime = 0;    // Track when we last printed the time
+    const unsigned long PRINT_INTERVAL = 5000;  // Print every 5 seconds
 
 public:
     Timer() {
         study_time = 25 * 60 * 1000;  // Default 25 minutes
         rest_time = 5 * 60 * 1000;    // Default 5 minutes
-        lastEncoderState = digitalRead(CLK_PIN);
+        lastCLK = digitalRead(CLK_PIN);
+        lastDT = digitalRead(DT_PIN);
         study_remaining = study_time;
         rest_remaining = rest_time;
         pausedFromState = IDLE;
         nextState = IDLE;
-        currentLightCount = maxLights;  // Initialize current number of lights in use
+        currentLightCount = maxLights;
     }
 
-    // Handle encoder input
     void handleEncoder() {
-        if (currentState != IDLE) return;  // Only allow adjustment in idle state
+        if (currentState != IDLE && currentState != PAUSED) return;
 
-        int currentState = digitalRead(CLK_PIN);
-        if (currentState != lastEncoderState) {
-            if (digitalRead(DT_PIN) != currentState) {
-                // Clockwise rotation
-                adjustTime(true);
-            } else {
-                // Counterclockwise rotation
-                adjustTime(false);
+        currentCLK = digitalRead(CLK_PIN);
+        int currentDT = digitalRead(DT_PIN);
+        
+        // Check if enough time has passed since last change
+        if ((millis() - lastDebounceTime) > debounceDelay) {
+            // If CLK changed, check if it's a valid rotation
+            if (currentCLK != lastCLK) {
+                lastDebounceTime = millis();  // Reset debounce timer
+                
+                // If CLK changed first, use DT to determine direction
+                if (currentCLK == HIGH) {
+                    if (currentDT != currentCLK) {
+                        adjustTime(true);   // Clockwise
+                    } else {
+                        adjustTime(false);  // Counter-clockwise
+                    }
+                }
             }
-            lastEncoderState = currentState;
         }
+        
+        lastCLK = currentCLK;
+        lastDT = currentDT;
     }
 
     void adjustTime(bool increase) {
-        unsigned long adjustment = TIME_STEP * 60 * 1000;  // Convert to milliseconds
+        unsigned long adjustment = 60 * 1000;  // 1 minute in milliseconds
         
         if (selectedMode == STUDY) {
-            if (increase && study_time < 60 * 60 * 1000) {  // Maximum 1 hour
+            if (increase && study_time < 60 * 60 * 1000) {  // Max 1 hour
                 study_time += adjustment;
-            } else if (!increase && study_time > 5 * 60 * 1000) {  // Minimum 5 minutes
+                study_remaining = study_time;  // Update remaining time as well
+            } else if (!increase && study_time > 1 * 60 * 1000) {  // Min 1 minute
                 study_time -= adjustment;
+                study_remaining = study_time;
             }
-            Serial.print("[Settings] Study time adjusted to: ");
+            Serial.print("[Settings] Study time: ");
             Serial.print(study_time / 60000);
             Serial.println(" minutes");
         } else {
-            if (increase && rest_time < 30 * 60 * 1000) {  // Maximum 30 minutes
+            if (increase && rest_time < 30 * 60 * 1000) {  // Max 30 minutes
                 rest_time += adjustment;
-            } else if (!increase && rest_time > 1 * 60 * 1000) {  // Minimum 1 minute
+                rest_remaining = rest_time;
+            } else if (!increase && rest_time > 1 * 60 * 1000) {  // Min 1 minute
                 rest_time -= adjustment;
+                rest_remaining = rest_time;
             }
-            Serial.print("[Settings] Rest time adjusted to: ");
+            Serial.print("[Settings] Rest time: ");
             Serial.print(rest_time / 60000);
             Serial.println(" minutes");
         }
@@ -137,12 +159,13 @@ public:
     void start(TimerState state) {
         currentState = state;
         startTime = millis();
+        lastPrintTime = startTime;  // Reset the print timer when starting
         timerDuration = (state == STUDY) ? study_time : rest_time;
         isPaused = false;
         Serial.print("[State Change] Started ");
         Serial.print(state == STUDY ? "Study" : "Rest");
         Serial.print(" mode - Duration: ");
-        Serial.print(timerDuration / 60000);  // Convert to minutes
+        Serial.print(timerDuration / 60000);
         Serial.println(" minutes");
         updateLight();
     }
@@ -204,10 +227,17 @@ public:
     void update() {
         if (currentState == IDLE || currentState == PAUSED) return;
 
-        unsigned long elapsed = millis() - startTime;
+        unsigned long currentTime = millis();
+        unsigned long elapsed = currentTime - startTime;
+        
+        // Print remaining time every 5 seconds
+        if (currentTime - lastPrintTime >= PRINT_INTERVAL) {
+            printRemainingTime(timerDuration - elapsed);
+            lastPrintTime = currentTime;
+        }
+
         if (elapsed >= timerDuration) {
             currentState = IDLE;
-            // Reset remaining time for completed mode
             if (pausedFromState == STUDY) {
                 study_remaining = study_time;
                 Serial.println("[Complete] Study session finished!");
@@ -217,6 +247,26 @@ public:
             }
             updateLight();
         }
+    }
+
+    void printRemainingTime(unsigned long remainingMillis) {
+        unsigned long totalSeconds = remainingMillis / 1000;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        
+        Serial.print("[Time Remaining] ");
+        if (currentState == STUDY) {
+            Serial.print("Study - ");
+        } else if (currentState == REST) {
+            Serial.print("Rest - ");
+        }
+        
+        // Format minutes and seconds with leading zeros if needed
+        if (minutes < 10) Serial.print("0");
+        Serial.print(minutes);
+        Serial.print(":");
+        if (seconds < 10) Serial.print("0");
+        Serial.println(seconds);
     }
 
     void updateLight() {
@@ -363,8 +413,8 @@ void setup() {
     // Set input pins
     pinMode(STUDY_TOUCH_SENSOR, INPUT);
     pinMode(REST_TOUCH_SENSOR, INPUT);
-    pinMode(CLK_PIN, INPUT);
-    pinMode(DT_PIN, INPUT);
+    pinMode(CLK_PIN, INPUT_PULLUP);  // Use internal pull-up resistor
+    pinMode(DT_PIN, INPUT_PULLUP);   // Use internal pull-up resistor
     pinMode(SW_PIN, INPUT_PULLUP);  // Use internal pull-up resistor
 
     // WiFi and MQTT settings
@@ -383,7 +433,5 @@ void loop() {
     
     handleUserInput();
     timer.update();
-    
-    delay(100);  // Short delay to avoid too frequent loop
 }
 
