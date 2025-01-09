@@ -131,8 +131,8 @@ void reconnectMQTT() {
 ### 2. Component Testing
 I tested each electronic component in the test files. If you want to make sure your component works well individually before you intergrate them:
 
-- [touch sensors](https://github.com/rorschachwilpeng/casa0014_chrono_lumina/tree/main/src/test/touchSensor_test)
-- [rotary encoder functions test](https://github.com/rorschachwilpeng/casa0014_chrono_lumina/tree/main/src/test/rotary_encoder_test)
+- [touch sensors](https://github.com/rorschachwilpeng/casa0014_chrono_lumina/blob/main/src/test/touchSensor_test/touchSensor_test.ino)
+- [rotary encoder functions test](https://github.com/rorschachwilpeng/casa0014_chrono_lumina/blob/main/src/test/rotary_encoder_test/rotary_encoder_test.ino)
 
 ### 3. System Integration
 
