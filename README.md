@@ -68,190 +68,178 @@ Calm Technology is the quiet revolution in the digital world, advocating for a m
 
 
 ## System Design
-
-<p align="center">
-  <img src="images/light_positions.png" alt="Working Amigo" width="500">
-</p>
+The system allows users to switch between work and rest modes with a simple touch of a sensor. A rotary encoder enables you to set the duration for study or rest sessions and even pause or restart them as needed, making it a practical tool for structuring your day with precision. Beyond just helping users structure their time into productive blocks, the system’s lights communicate subtle yet vital information to
+the surrounding environment. 
 
 <p align="center">
   <img src="images/workflow.jpg" alt="Working Amigo" width="500">
 </p>
 
+
+The program implements a timer system with study and rest modes, allowing users to select modes, adjust durations, and toggle states via a rotary encoder and touch sensors. It provides real-time feedback through NeoPixel LEDs, reflecting the current mode and timer status using color changes. The system manages time adjustments and state transitions with precise control, while WiFi and MQTT connectivity enable dynamic light updates by publishing to a specified topic. Its modular design separates input handling, timer logic, and communication for scalability and reliability.
+
+
+
 <p align="center">
   <img src="images/casa0014_system_design.png" alt="Working Amigo" width="1000">
-</p>
-
-**Reference:**
-
-[1] [Tina](https://github.com/tantoon94)'s Drawing Work
-
-## 3D Modeling
-
-Some cool design I probably can learn from:
-<p align="center">
-  <img src="images/3d_ideas.jpeg" alt="Working Amigo" width="500">
-</p>
-
-**Working Amigo** 3D model sketch:
-<p align="center">
-  <img src="images/3d_design_idea.png" alt="Working Amigo" width="500">
 </p>
 
 
 ## Building Process
 <p align="center">
-  <img src="images/process.png" alt="Working Amigo" width="500">
+  <img src="images/building_process.jpg" alt="Working Amigo" width="500">
 </p>
 
 
-### 1. Set Up Wifi and MQTT connection with Arduino MKR 1010 WiFi
+### 1. Hardware Setup
 
-```C++
+**MQTT Setup**
+```cpp
 void startWifi() {
-  if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("WiFi module not found, cannot proceed.");
-    while (true);
-  }
-
-  if (WiFi.firmwareVersion() < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Firmware upgrade required.");
-  }
-
-  int n = WiFi.scanNetworks();
-  if (n == 0) {
-    Serial.println("No networks found.");
-    return;
-  }
-
-  for (int i = 0; i < n; ++i) {
-    if (WiFi.SSID(i).equals(ssid)) {
-      WiFi.begin(ssid, password);
-      while (WiFi.status() != WL_CONNECTED) delay(600);
-      Serial.println("Connected to WiFi: " + String(ssid));
-      return;
+    Serial.print("Connecting to WiFi");
+    WiFi.begin(ssid, password);
+    
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
     }
-  }
-  Serial.println("Failed to connect to any known network.");
+    
+    Serial.println("\nWiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
 }
-```
 
-```C++
 void reconnectMQTT() {
-  if (WiFi.status() != WL_CONNECTED) startWifi();
-
-  while (!client.connected()) {
-    String clientId = "LuminaSelector" + String(random(0xffff), HEX);
-    if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
-      Serial.println("MQTT connected");
-    } else {
-      Serial.println("MQTT connection failed, retrying in 5 seconds...");
-      delay(5000);
+    while (!client.connected()) {
+        Serial.print("Attempting MQTT connection...");
+        String clientId = "ArduinoClient-";
+        clientId += String(random(0xffff), HEX);
+        
+        if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
+            Serial.println("connected");
+        } else {
+            Serial.print("failed, rc=");
+            Serial.print(client.state());
+            Serial.println(" try again in 5 seconds");
+            delay(5000);
+        }
     }
-  }
 }
 ```
 
-### 2. Design the system
-  We illuminate the Chrono Lumina by publish RGB info to the MQTT topics.
 
-  #### 2.1. Dividing area: Chrono Lumina illuminate constantly
-  ```cpp
-  void controlDividingLine(int lights[], int numLights) {
-    for (int i = 0; i < numLights; i++) {
-      for (int pixel_id = 0; pixel_id < 12; pixel_id++) {
-        sprintf(mqtt_topic_demo, "student/CASA0014/light/%d/pixel/", lights[i]);
-        char mqtt_message[100];
-        sprintf(mqtt_message, "{\"pixelid\": %d, \"R\": 255, \"G\": 0, \"B\": 0, \"W\": 0}", pixel_id);
-        client.publish(mqtt_topic_demo, mqtt_message);
-      }
-    }
-  }
-  ```
+### 2. Component Testing
+I tested each electronic component in the test files. If you want to make sure your component works well individually before you intergrate them:
 
-  #### 2.2. Stduy/Resting areas: Chrono Lumina illuminate with timer
-  ```cpp
-void controlStudyAreaWithTimer(int lights[], int numLights, bool dynamicEffect, int totalTime) {
-    static float angle = 0.0;
-    static unsigned long globalStartTime = millis();
-    static int currentLightIndex = 0;
+[touch sensors](https://github.com/rorschachwilpeng/casa0014_chrono_lumina/tree/main/src/test/touchSensor_test)
+[rotary encoder functions test](https://github.com/rorschachwilpeng/casa0014_chrono_lumina/tree/main/src/test/rotary_encoder_test)
 
-    int timeBlock = totalTime / numLights;
-    unsigned long elapsedTime = millis() - globalStartTime;
+### 3. System Integration
 
-    // Turn off lights if time is up
-    if (elapsedTime > (unsigned long)(totalTime * 1000)) {
-        for (int i = 0; i < numLights; i++) {
-            for (int pixel_id = 0; pixel_id < 12; pixel_id++) {
-                sprintf(mqtt_topic_demo, "student/CASA0014/light/%d/pixel/", lights[i]);
-                char mqtt_message[100];
-                sprintf(mqtt_message, "{\"pixelid\": %d, \"R\": 0, \"G\": 0, \"B\": 0, \"W\": 0}", pixel_id);
-                client.publish(mqtt_topic_demo, mqtt_message);
-            }
-        }
-        return;
-    }
+The system integrates various hardware components, including touch sensors, a rotary encoder, and the ESP8266 microcontroller. Key initialization steps ensure proper setup for each component:
 
-    // Determine current active light
-    currentLightIndex = elapsedTime / (timeBlock * 1000);
+```cpp
+void setup() {
+    Serial.begin(115200);
+    delay(1000);
 
-    for (int i = 0; i < numLights; i++) {
-        for (int pixel_id = 0; pixel_id < 12; pixel_id++) {
-            sprintf(mqtt_topic_demo, "student/CASA0014/light/%d/pixel/", lights[i]);
+    // Set input pins
+    pinMode(STUDY_TOUCH_SENSOR, INPUT);
+    pinMode(REST_TOUCH_SENSOR, INPUT);
+    pinMode(CLK_PIN, INPUT_PULLUP);  // Use internal pull-up resistor
+    pinMode(DT_PIN, INPUT_PULLUP);   // Use internal pull-up resistor
+    pinMode(SW_PIN, INPUT_PULLUP);  // Use internal pull-up resistor
 
-            int R = 0, G = 0, B = 0, W = 0;
-            if (i == currentLightIndex) {
-                if (dynamicEffect) {
-                    angle += 0.1;
-                    if (angle > 2 * PI) angle -= 2 * PI;
-                    float brightness = minBrightness + (maxBrightness - minBrightness) * (0.5 * (1 + sin(angle)));
-                    R = (int)(brightness);
-                    G = (int)(brightness * 0.5);
-                    B = (int)(brightness * 0.2);
-                } else {
-                    R = 255;
-                    G = 0;
-                    B = 0;
-                }
-            }
-
-            char mqtt_message[100];
-            sprintf(mqtt_message, "{\"pixelid\": %d, \"R\": %d, \"G\": %d, \"B\": %d, \"W\": %d}", pixel_id, R, G, B, W);
-            client.publish(mqtt_topic_demo, mqtt_message);
-        }
-    }
+    // WiFi and MQTT settings
+    startWifi();
+    client.setServer(mqtt_server, mqtt_port);
+    client.setBufferSize(512);
+    
+    Serial.println("Setup complete");
 }
+```
 
+
+### 4. Design the system
+
+**4.1.Timer Function:**
+- Two timekeeping modes are realized: **Study** and **Rest**
+- The default study time is 25 minutes, and the break time is 5 minutes
+- The length of time can be adjusted by means of a rotary encoder
+
+  ```cpp
+      Timer() {
+          study_time = 25 * 60 * 1000;  // Default 25 minutes
+          rest_time = 5 * 60 * 1000;    // Default 5 minutes
+          lastCLK = digitalRead(CLK_PIN);
+          lastDT = digitalRead(DT_PIN);
+          study_remaining = study_time;
+          rest_remaining = rest_time;
+          pausedFromState = IDLE;
+          nextState = IDLE;
+          currentLightCount = maxLights;
+      }
   ```
-  ```controlStudyAreaWithTimer```  is a function designed to manage LED lights in a study or resting area via MQTT communication. Each light represents a time block determined by the total duration divided by the number of lights. During the current active time block, the corresponding light dynamically illuminates if dynamic effects are enabled; otherwise, it remains static. When the total time elapses, all lights turn off. The function ensures seamless control of both dynamic and static lighting effects based on a timer.
 
+**4.2. Input Control**
+- Two touch sensors are used to select study and rest modes
+- Time adjustment is performed using a rotary encoder
+- The encoder button is used to start/pause the timing
+  ```cpp
+  // Touch Sensors
+  #define STUDY_TOUCH_SENSOR 4    // Study mode touch sensor
+  #define REST_TOUCH_SENSOR 5     // Rest mode touch sensor
 
-### 3. Build the Chrono Lumina Controller
-[To be Finished]
-
-### 4. Publish Studying and Resting Data to MQTT
-[To be Finished]
-
-### 5. Store data on a RPi gateway
-[To be Finished]
-
-### 6. Visualise time series data
-[To be Finished]
-
-
-### 7. 3D Modeling
-[To be Finished]
-
+  // Rotary Encoder
+  #define CLK_PIN 14             // CLK connected to GPIO14
+  #define DT_PIN 12              // DT connected to GPIO12
+  #define SW_PIN 13              // SW connected to GPIO13
+  ```
+**4.3. LED Lighting Feedback**
+  - Control the LED strip via MQTT protocol
+  - Different colors are displayed for different statuses:
+    1. Learning Mode: Red
+    2. Rest Mode: Green
+    3. Paused Status: Yellow
+    4. Idle Status: Off
+    ```cpp
+        void updateLight() {
+          switch (currentState) {
+              case STUDY:
+                  setAllPixels(255, 0, 0, 0);  // Study mode shows red
+                  break;
+              case REST:
+                  setAllPixels(0, 255, 0, 0);  // Rest mode shows green
+                  break;
+              case PAUSED:
+                  setAllPixels(255, 255, 0, 0);  // Paused state shows yellow
+                  break;
+              case IDLE:
+                  setAllPixels(0, 0, 0, 0);    // Idle state turns off all lights
+                  break;
+          }
+      }
+      ```
+  **4.4. State Management**
+- FOUR STATES ARE IMPLEMENTED: STUDY, REST, IDLE, AND PAUSED
+- You can switch modes while paused
+  ```cpp
+  enum TimerState {
+      STUDY,      // Study mode
+      REST,       // Rest mode
+      IDLE,       // Idle state
+      PAUSED      // Paused state
+  };
+  ```
 
 ## Reflection
 
-### Development Challenges
-... (Discussion of any key additions, changes, and challenges faced during the development of the system.)
+### User Feedback
+User feedback highlighted key improvements. While the lighting system kept users focused, many missed break cues, suggesting the need for sound alerts. Red and green lights were intuitive for regular users but confusing for new ones, raising the need for self-explanatory cues. Manual mode switching via touch sensors proved effective, offering users a mental reset and improving usability.
 
-### Observations on Sensing Limitations
-... (Insights on the limitations of what the device is sensing and how these limitations impact the data.)
+### How IoT Redefines Interaction
+This project highlighted IoT's ability to make data interactive and intuitive. Inspired by smart devices, I explored how lighting could communicate work status and support collaboration. The concept of "Calm Technology" stood out, showing how tech can quietly enhance productivity. Beyond personal time management, the project revealed IoT's potential to improve teamwork and streamline processes.
 
-### Unintended Consequences
-... (Reflection on any unintended consequences of the device and its deployment.)
 
-### Negative Consequences
-... (Analysis of the potential negative consequences of the devices being prototyped.)
+### Potential Negative Impacts
+Lights might reveal work patterns, raising privacy concerns, or distract in shared spaces. Unsecured MQTT transmissions also pose security risks. Future improvements include encrypting data, enhancing user control over information sharing, and refining status displays to improve usability and privacy.
