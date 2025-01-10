@@ -44,16 +44,18 @@ Calm Technology is the quiet revolution in the digital world, advocating for a m
   - Interface: 2.54mm pin spacing for easy breadboard connections  
   The TTP223B module is based on the capacitive touch sensing IC TTP223B, offering a wear-free touch input solution to replace traditional mechanical buttons. [(handsontec.com)](https://www.handsontec.com)
 
-- **Arduino MKR WiFi 1010 Specifications**
-  - Microcontroller: Microchip SAMD21 Cortex-M0+ 32-bit ARM MCU
+
+- **ESP8266**
+  - Microcontroller: Tensilica L106 32-bit RISC processor, clocked at 80 MHz (can be overclocked to 160 MHz)
   - Operating Voltage: 3.3V
-  - Digital I/O Pins: 8 (12 with PWM)
-  - Analog Input Pins: 7
-  - Wi-Fi Module: u-blox NINA-W10 (802.11 b/g/n)
-  - Bluetooth: Bluetooth® and BLE v4.2
-  - Flash Memory: 256 KB
-  - SRAM: 32 KB  
-  [Arduino MKR WiFi 1010 Documentation](https://docs.arduino.cc/hardware/mkr-wifi-1010)
+  - Digital I/O Pins: 16
+  - Analog Input Pins: 1 (10-bit ADC)
+  - Wi-Fi Module: IEEE 802.11 b/g/n with full TCP/IP stack
+  - Bluetooth: Not supported
+  - Flash Memory: Varies by module (typically 512 KB to 4 MB)
+  - SRAM: 64 KB instruction RAM, 96 KB data RAM
+  [ESP8266 Documentation](https://www.espressif.com/en/products/socs/esp8266)
+
 
 - **EC11B15244 Rotary Encoder Specifications**
   - Type: Incremental rotary encoder
